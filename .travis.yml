@@ -24,3 +24,13 @@ after-success:
   - docker build -t developercarti/multi-nginx ./nginx
   - docker build -t developercarti/multi-server ./server
   - docker build -t developercarti/multi-worker ./worker
+#Login to Docker CLI with encrypted envionment variables
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+#now that we've logged in and built out production versions, take the images and push them to dockerhub
+  - docker push developercarti/multi-client
+  - docker push developercarti/multi-nginx
+  - docker push developercarti/multi-server
+  - docker push developercarti/multi-worker
+
+
+
