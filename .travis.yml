@@ -1,0 +1,26 @@
+#Before install build a test version of our "client" project. then run some tests inside of it
+#make an image out of the dockerfile.dev file
+#we only get access to tests suits when we have all dependencies attached to the project
+#the production dockerfile builds a production version of the project and copies over a raw version of the project which does not allow us to run any tests
+#The production dockerfile does not allow us to run any tests
+
+
+sudo: required
+#get access to a copy of docker
+services:
+  - docker
+#tagging image with my docker ID. And the -f flag allows to override the default dockerfile with ours.
+#also specifiying the dockerfile.dev that exists in the client directory since travis file is in root directory
+#then specifying the build contexct (where all the project files for the image can be found) aka ./client
+before_install:
+  - docker build -t developercarti/react-test -f ./client/Dockerfile.dev ./client
+#script is my test running section after building image. any code outside of 0 is a failure
+#docker run image we just created before in before_install.
+script:
+  - docker run -e CI=true developercarti/react-test npm test 
+#after passing tests, build production version of all projects, then push to dockerhub
+after-success:
+  - docker build -t developercarti/multi-client ./client
+  - docker build -t developercarti/multi-nginx ./nginx
+  - docker build -t developercarti/multi-server ./server
+  - docker build -t developercarti/multi-worker ./worker
