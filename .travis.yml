@@ -4,7 +4,6 @@
 #the production dockerfile builds a production version of the project and copies over a raw version of the project which does not allow us to run any tests
 #The production dockerfile does not allow us to run any tests
 
-
 sudo: required
 #get access to a copy of docker
 services:
@@ -17,20 +16,29 @@ before_install:
 #script is my test running section after building image. any code outside of 0 is a failure
 #docker run image we just created before in before_install.
 script:
-  - docker run -e CI=true developercarti/react-test npm test 
+  - docker run -e CI=true developercarti/react-test npm test
 #after passing tests, build production version of all projects, then push to dockerhub
 after-success:
   - docker build -t developercarti/multi-client ./client
   - docker build -t developercarti/multi-nginx ./nginx
   - docker build -t developercarti/multi-server ./server
   - docker build -t developercarti/multi-worker ./worker
-#Login to Docker CLI with encrypted envionment variables
+  #Login to Docker CLI with encrypted envionment variables
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
-#now that we've logged in and built out production versions, take the images and push them to dockerhub
+  #now that we've logged in and built out production versions, take the images and push them to dockerhub
   - docker push developercarti/multi-client
   - docker push developercarti/multi-nginx
   - docker push developercarti/multi-server
   - docker push developercarti/multi-worker
 
-
-
+deploy:
+  provider: elasticbeanstalk
+  region: "us-east-1"
+  app: "multi-docker"
+  env: "MultiDocker-env"
+  bucket_name: "elasticbeanstalk-us-east-1-319432293873"
+  bucket_path: "docker-multi"
+  on:
+    branch: master
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key: $AWS_SECRET_KEY
